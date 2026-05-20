@@ -5,3 +5,7 @@
 .classpath
 .project
 .settings/
+/.apt_generated/
+
+# Claude
+.claude/
