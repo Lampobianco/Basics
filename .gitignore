@@ -6,6 +6,7 @@
 .project
 .settings/
 /.apt_generated/
+*.launch
 
 # Claude
 .claude/
