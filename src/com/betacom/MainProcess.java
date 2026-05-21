@@ -1,59 +1,111 @@
-package com.betacom;
+﻿package com.betacom;
 
+import java.io.File;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 import com.betacom.exeption.AcademyExeption;
 import com.betacom.interfaces.GeneralProcess;
-import com.betacom.processes.AnonimusManager;
-import com.betacom.processes.BaseManager;
-import com.betacom.processes.BuilderManager;
-import com.betacom.processes.CarManager;
-import com.betacom.processes.CollectionManager;
-import com.betacom.processes.DateManager;
-import com.betacom.processes.EnumManager;
-import com.betacom.processes.ExeptionManager;
-import com.betacom.processes.InnerManager;
-import com.betacom.processes.InterfacesManager;
-import com.betacom.processes.JsonManager;
-import com.betacom.processes.ListManager;
-import com.betacom.processes.LogManager;
-import com.betacom.processes.LombokManager;
-import com.betacom.processes.MapManager;
-import com.betacom.processes.SequenzialManager;
-import com.betacom.processes.StreamManager;
-import com.betacom.processes.StringManager;
+import com.betacom.utils.Utilities;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class MainProcess {
 
-	private static final Map<String, GeneralProcess> PROCESSES = Map.ofEntries(
-			Map.entry("base",       new BaseManager()),
-			Map.entry("enum",       new EnumManager()),
-			Map.entry("car",        new CarManager()),
-			Map.entry("date",       new DateManager()),
-			Map.entry("exeption",   new ExeptionManager()),
-			Map.entry("animal",     new InterfacesManager()),
-			Map.entry("list",       new ListManager()),
-			Map.entry("string",     new StringManager()),
-			Map.entry("map",        new MapManager()),
-			Map.entry("collection", new CollectionManager()),
-			Map.entry("sequenzial", new SequenzialManager()),
-			Map.entry("stream",     new StreamManager()),
-			Map.entry("anonimus",   new AnonimusManager()),
-			Map.entry("json",       new JsonManager()),
-			Map.entry("inner",      new InnerManager()),
-			Map.entry("builder",      new BuilderManager()),
-			Map.entry("lombok",      new LombokManager()),
-			Map.entry("log",         new LogManager())
-	);
+	/*
+	 * La mappa viene costruita AUTOMATICAMENTE a runtime:
+	 * non serve piu aggiungere manualmente ogni nuovo Manager.
+	 * Basta creare la classe nel package "com.betacom.processes"
+	 * e implementare GeneralProcess -- il resto lo fa loadProcesses().
+	 */
+	private static final Map<String, GeneralProcess> PROCESSES = loadProcesses();
+
+	/**
+	 * Scansiona il package dei processi a runtime e costruisce la mappa.
+	 *
+	 * Come funziona passo per passo:
+	 *   1. Trova la cartella del package sul filesystem tramite il ClassLoader
+	 *   2. Carica ogni file .class come classe Java
+	 *   3. Controlla se la classe implementa GeneralProcess
+	 *   4. Ricava la chiave dal nome della classe:
+	 *        "BaseManager"       --> "base"
+	 *        "LogManager"        --> "log"
+	 *        "ReflectionManager" --> "reflection"
+	 *   5. Crea un'istanza con il costruttore senza parametri
+	 *   6. Aggiunge la coppia chiave/istanza alla mappa
+	 */
+	private static Map<String, GeneralProcess> loadProcesses() {
+
+		Map<String, GeneralProcess> map = new HashMap<>();
+		String packageName = "com.betacom.processes";
+
+		try {
+			// Trasforma "com.betacom.processes" in "com/betacom/processes"
+			String packagePath = packageName.replace('.', '/');
+
+			// Chiede al ClassLoader dove si trova fisicamente il package
+			URL packageUrl = ClassLoader.getSystemClassLoader().getResource(packagePath);
+			if (packageUrl == null) {
+				System.err.println("[ERRORE] Package non trovato: " + packageName);
+				return map;
+			}
+
+			File packageDir = new File(packageUrl.toURI());
+			File[] files = packageDir.listFiles();
+			if (files == null) return map;
+
+			for (File file : files) {
+
+				// Considera solo i file .class
+				// Salta le inner class (contengono "$" nel nome, es. "Foo$Bar.class")
+				if (!file.getName().endsWith(".class")) continue;
+				if (file.getName().contains("$"))       continue;
+
+				// Ricostruisce il nome completo della classe ed la carica
+				String className = packageName + "." + file.getName().replace(".class", "");
+				Class<?> cls = Class.forName(className);
+
+				// Controlla i requisiti:
+				// - deve implementare GeneralProcess
+				// - non deve essere un'interfaccia
+				// - non deve essere una classe astratta
+				if (!GeneralProcess.class.isAssignableFrom(cls)) continue;
+				if (cls.isInterface())                            continue;
+				if (Modifier.isAbstract(cls.getModifiers()))     continue;
+
+				// Ricava la chiave rimuovendo il suffisso "Manager" e mettendo in minuscolo
+				// Esempio: "ReflectionManager" --> "reflection"
+				String key = cls.getSimpleName().replace("Manager", "").toLowerCase();
+
+				// Crea l'istanza usando il costruttore senza parametri
+				GeneralProcess instance = (GeneralProcess) cls.getDeclaredConstructor().newInstance();
+				map.put(key, instance);
+			}
+
+		} catch (Exception e) {
+			System.err.println("[ERRORE] Caricamento processi fallito: " + e.getMessage());
+		}
+
+		// Restituisce la mappa come non modificabile (sicurezza)
+		return Collections.unmodifiableMap(map);
+	}
 
 	public static void main(String[] args) {
+
+		// Stampa tutti i processi caricati automaticamente
+		log.info("Processi disponibili: {}", PROCESSES.keySet());
 
 		Scanner scanner = new Scanner(System.in);
 		System.out.print("Inserisci il processo da avviare: ");
 		String selection = scanner.nextLine().trim();
 
-		System.out.println("*** Main Process is Running -> " + selection + " ***");
+		log.info("Main Process is Ready to Execute {} at {} *****", selection, Utilities.dateToString(LocalDateTime.now()));
 
 		try {
 			GeneralProcess gp = PROCESSES.get(selection);
