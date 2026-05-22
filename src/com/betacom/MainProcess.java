@@ -22,87 +22,60 @@ public class MainProcess {
 	 * La mappa viene costruita AUTOMATICAMENTE a runtime:
 	 * non serve piu aggiungere manualmente ogni nuovo Manager.
 	 * Basta creare la classe nel package "com.betacom.processes"
-	 * e implementare GeneralProcess -- il resto lo fa loadProcesses().
+	 * e implementare GeneralProcess e il resto lo fa loadProcesses().
 	 */
 	private static final Map<String, GeneralProcess> PROCESSES = loadProcesses();
 
-	/**
-	 * Scansiona il package dei processi a runtime e costruisce la mappa.
-	 *
-	 * Come funziona passo per passo:
-	 *   1. Trova la cartella del package sul filesystem tramite il ClassLoader
-	 *   2. Carica ogni file .class come classe Java
-	 *   3. Controlla se la classe implementa GeneralProcess
-	 *   4. Ricava la chiave dal nome della classe:
-	 *        "BaseManager"       --> "base"
-	 *        "LogManager"        --> "log"
-	 *        "ReflectionManager" --> "reflection"
-	 *   5. Crea un'istanza con il costruttore senza parametri
-	 *   6. Aggiunge la coppia chiave/istanza alla mappa
+	/*
+	 * Scansiona il package a runtime e costruisce la mappa automaticamente.
+	 * 1. Trova la cartella fisica del package tramite il ClassLoader
+	 * 2. Carica ogni .class, salta interfacce e classi astratte
+	 * 3. Chiave = nome senza "Manager" in minuscolo → "LogManager" = "log"
+	 * 4. Crea un'istanza e la aggiunge alla mappa
 	 */
 	private static Map<String, GeneralProcess> loadProcesses() {
 
 		Map<String, GeneralProcess> map = new HashMap<>();
-		String packageName = "com.betacom.processes";
+		String pkg = "com.betacom.processes";
 
 		try {
-			// Trasforma "com.betacom.processes" in "com/betacom/processes"
-			String packagePath = packageName.replace('.', '/');
+			URL pkgUrl = ClassLoader.getSystemClassLoader().getResource(pkg.replace('.', '/'));
+			if (pkgUrl == null) { log.error("Package non trovato: {}", pkg); return map; }
 
-			// Chiede al ClassLoader dove si trova fisicamente il package
-			URL packageUrl = ClassLoader.getSystemClassLoader().getResource(packagePath);
-			if (packageUrl == null) {
-				System.err.println("[ERRORE] Package non trovato: " + packageName);
-				return map;
-			}
+			File[] classFiles = new File(pkgUrl.toURI()).listFiles();
+			if (classFiles == null) return map;
 
-			File packageDir = new File(packageUrl.toURI());
-			File[] files = packageDir.listFiles();
-			if (files == null) return map;
+			for (File file : classFiles) {
 
-			for (File file : files) {
+				// Salta tutto tranne i .class — ignora inner class (es. "Foo$Bar.class")
+				if (!file.getName().endsWith(".class") || file.getName().contains("$")) continue;
 
-				// Considera solo i file .class
-				// Salta le inner class (contengono "$" nel nome, es. "Foo$Bar.class")
-				if (!file.getName().endsWith(".class")) continue;
-				if (file.getName().contains("$"))       continue;
-
-				// Ricostruisce il nome completo della classe ed la carica
-				String className = packageName + "." + file.getName().replace(".class", "");
-				Class<?> cls = Class.forName(className);
-
-				// Controlla i requisiti:
-				// - deve implementare GeneralProcess
-				// - non deve essere un'interfaccia
-				// - non deve essere una classe astratta
+				// Carica la classe, verifica che implementi GeneralProcess e sia concreta
+				Class<?> cls = Class.forName(pkg + "." + file.getName().replace(".class", ""));
 				if (!GeneralProcess.class.isAssignableFrom(cls)) continue;
-				if (cls.isInterface())                            continue;
-				if (Modifier.isAbstract(cls.getModifiers()))     continue;
+				if (cls.isInterface() || Modifier.isAbstract(cls.getModifiers())) continue;
 
-				// Ricava la chiave rimuovendo il suffisso "Manager" e mettendo in minuscolo
-				// Esempio: "ReflectionManager" --> "reflection"
+				// Deriva la chiave e crea l'istanza
 				String key = cls.getSimpleName().replace("Manager", "").toLowerCase();
-
-				// Crea l'istanza usando il costruttore senza parametri
-				GeneralProcess instance = (GeneralProcess) cls.getDeclaredConstructor().newInstance();
-				map.put(key, instance);
+				map.put(key, (GeneralProcess) cls.getDeclaredConstructor().newInstance());
 			}
 
 		} catch (Exception e) {
-			System.err.println("[ERRORE] Caricamento processi fallito: " + e.getMessage());
+			log.error("Caricamento processi fallito: {}", e.getMessage());
 		}
 
-		// Restituisce la mappa come non modificabile (sicurezza)
 		return Collections.unmodifiableMap(map);
 	}
 
 	public static void main(String[] args) {
 
-		// Stampa tutti i processi caricati automaticamente
-		log.info("Processi disponibili: {}", PROCESSES.keySet());
+		// Stampa tutti i processi caricati automaticamente, uno per riga
+		log.info("Processi disponibili:\n{}", PROCESSES.keySet().stream()
+				.sorted()
+				.collect(java.util.stream.Collectors.joining("\n  - ", "  - ", "")));
 
 		Scanner scanner = new Scanner(System.in);
-		System.out.print("Inserisci il processo da avviare: ");
+		System.out.print("\n" +"Inserisci il processo da avviare: ");
 		String selection = scanner.nextLine().trim();
 
 		log.info("Main Process is Ready to Execute {} at {} *****", selection, Utilities.dateToString(LocalDateTime.now()));
