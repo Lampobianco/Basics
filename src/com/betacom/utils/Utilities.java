@@ -47,6 +47,14 @@ public class Utilities { // spesso questa classe la si duplica tra vari progetti
 	}
 	
 	
+	public static LocalDate dateToLocalDate(Date value) {
+		if(value == null) 
+			return null;
+		
+		//manca qualcosa qui per convertire la data proveniente da una tabella penso in java
+	}
+	
+	
 	public static String dateToString(LocalDate myDate) { 
 		return dateToString(PATTERN_DATE, myDate);
 	}
