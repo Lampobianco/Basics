@@ -47,11 +47,10 @@ public class Utilities { // spesso questa classe la si duplica tra vari progetti
 	}
 	
 	
-	public static LocalDate dateToLocalDate(Date value) {
-		if(value == null) 
-			return null;
-		
-		//manca qualcosa qui per convertire la data proveniente da una tabella penso in java
+	// Converte una java.sql.Date (che arriva dal DB) in LocalDate usabile in Java
+	public static LocalDate dateToLocalDate(Object value) {
+		if (value == null) return null;
+		return ((java.sql.Date) value).toLocalDate();
 	}
 	
 	

@@ -12,13 +12,13 @@ import lombok.ToString;
 @Builder
 @ToString
 public class Dipendenti {
-	private String idDipendente;
+	private Integer idDipendente;
 	private String nome;
 	private String cognome;
 	private LocalDate dataAssunzione;
 	private String telefono;
 	private String mansione;
 	private double stipendio;
-	private String idUfficio;
+	private Integer idUfficio;
 	private String code;
 }

@@ -34,13 +34,23 @@ public class SQLConfiguration {
 	private static void loadConfiguration() {
 		try {
 			InputStream input = SQLConfiguration.class.getClassLoader().getResourceAsStream("sql.properties");
-			if(input == null)
-				throw new AcademyExeption("File sql.properties non trovato nel classpath");
+			if (input == null) throw new AcademyExeption("File sql.properties non trovato nel classpath");
 			prop.load(input);
-			log.info("Configurazione SQL caricata correttamente");
+
+			input = SQLConfiguration.class.getClassLoader().getResourceAsStream("query.properties");
+			if (input == null) throw new AcademyExeption("File query.properties non trovato nel classpath");
+			queries.load(input);
+
+			log.info("Configurazione SQL e query caricate correttamente");
 		} catch(IOException e) {
 			throw new AcademyExeption(e.getMessage());
 		}
+	}
+
+	// Restituisce la query associata alla chiave nel file query.properties
+	// es. getQuery("query.dipendenti") --> "select * from dipendenti"
+	public String getQuery(String key) {
+		return queries.getProperty(key);
 	}
 
 	// Se la connessione non esiste la crea, altrimenti restituisce quella già aperta
@@ -76,6 +86,37 @@ public class SQLConfiguration {
 	// Metodo privato di accesso alle proprietà
 	private String getProperty(String key) {
 		return prop.getProperty(key);
+	}
+
+	// Chiude la connessione al DB
+	public void closeConnection() throws AcademyExeption {
+		try {
+			if (con != null) { con.close(); con = null; }
+		} catch (Exception e) { throw new AcademyExeption(e.getMessage()); }
+	}
+
+	// Abilita autocommit (ogni statement viene committato automaticamente)
+	public void setAutocommit() throws AcademyExeption {
+		try { getConnection().setAutoCommit(true); }
+		catch (Exception e) { throw new AcademyExeption(e.getMessage()); }
+	}
+
+	// Disabilita autocommit — serve per gestire transazioni manuali
+	public void setTransaction() throws AcademyExeption {
+		try { getConnection().setAutoCommit(false); }
+		catch (Exception e) { throw new AcademyExeption(e.getMessage()); }
+	}
+
+	// Conferma la transazione corrente
+	public void commit() throws AcademyExeption {
+		try { getConnection().commit(); }
+		catch (Exception e) { throw new AcademyExeption(e.getMessage()); }
+	}
+
+	// Annulla la transazione corrente
+	public void rollback() throws AcademyExeption {
+		try { getConnection().rollback(); }
+		catch (Exception e) { throw new AcademyExeption(e.getMessage()); }
 	}
 
 	// Getter per le proprietà
