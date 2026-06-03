@@ -29,7 +29,7 @@ public class ClientiDao {
 
 	// Update dinamico — aggiorna solo i campi non null
 	public int update(String queryName, Cliente cli) throws Exception {
-		if (cli.getIdCliento() == null)
+		if (cli.getIdCliente() == null)
 			throw new AcademyExeption("Primary key non caricata per un update");
 
 		StringBuilder query = new StringBuilder("UPDATE clienti SET ");
@@ -46,7 +46,7 @@ public class ClientiDao {
 		query.append(String.join(", ", fields));
 		query.append(" ");
 		query.append(SQLConfiguration.getInstance().getQuery(queryName));
-		params.add(cli.getIdCliento());
+		params.add(cli.getIdCliente());
 
 		log.debug("SQL generata: {}", query);
 		return db.save(query.toString(), params.toArray(), false);
@@ -55,6 +55,6 @@ public class ClientiDao {
 	// Delete per ID
 	public int delete(Integer id) throws Exception {
 		if (id == null) throw new AcademyExeption("Id non caricato");
-		return db.save("delete from clienti where id_cliento = ?", new Object[]{id}, false);
+		return db.save("delete from clienti where id_cliente = ?", new Object[]{id}, false);
 	}
 }

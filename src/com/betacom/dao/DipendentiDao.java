@@ -57,14 +57,13 @@ public class DipendentiDao {
 	private Dipendenti buildDipendente(Map<String, Object> d) {
 		return Dipendenti.builder()
 				.idDipendente((Integer) d.get("id_dipendente"))
-				.nome(d.get("nome").toString())
-				.cognome(d.get("cognome").toString())
+				.nome((String) d.get("nome"))
+				.cognome((String) d.get("cognome"))
 				.dataAssunzione(Utilities.dateToLocalDate(d.get("data_assunzione")))
-				.telefono(d.get("telefono").toString())
-				.mansione(d.get("mansione").toString())
+				.telefono((String) d.get("telefono"))
+				.mansioni((String) d.get("mansioni"))
 				.stipendio(((BigDecimal) d.get("stipendio")).doubleValue())
 				.idUfficio((Integer) d.get("id_ufficio"))
-				.code(d.get("code").toString())
 				.build();
 	}
 }

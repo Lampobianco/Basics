@@ -41,7 +41,7 @@ public class ServiceUpdate {
 		log.debug("Update cliente id: {}", pk);
 		int rc = 0;
 		Cliente cli = new Cliente();
-		cli.setIdCliento(pk);
+		cli.setIdCliente(pk);
 		cli.setDenominazione("Updated srl");
 		cli.setTelefono("99991233");
 		try {

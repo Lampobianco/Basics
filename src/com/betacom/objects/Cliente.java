@@ -14,7 +14,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Cliente {
-	private Integer idCliento;
+	private Integer idCliente;
 	private String  denominazione;
 	private String  pIva;
 	private String  indirizzo;

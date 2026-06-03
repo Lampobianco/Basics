@@ -17,8 +17,7 @@ public class Dipendenti {
 	private String cognome;
 	private LocalDate dataAssunzione;
 	private String telefono;
-	private String mansione;
+	private String mansioni;
 	private double stipendio;
 	private Integer idUfficio;
-	private String code;
 }
