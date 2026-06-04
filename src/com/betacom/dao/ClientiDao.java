@@ -2,6 +2,9 @@ package com.betacom.dao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.betacom.exeption.AcademyExeption;
 import com.betacom.objects.Cliente;
@@ -57,4 +60,35 @@ public class ClientiDao {
 		if (id == null) throw new AcademyExeption("Id non caricato");
 		return db.save("delete from clienti where id_cliente = ?", new Object[]{id}, false);
 	}
+	
+	// Recupera tutti i clienti
+	public List<Cliente> findAll() throws Exception {
+		String query = SQLConfiguration.getInstance().getQuery("query.clienti");
+		List<Map<String, Object>> lC = db.list(query);
+		return lC.stream()
+				.map(c -> Cliente.builder()
+						.idCliente((Integer) c.get("id_cliente"))
+						.denominazione(c.get("denominazione").toString())
+						.pIva(c.get("p_iva").toString())
+						.indirizzo(c.get("indirizzo").toString())
+						.telefono(c.get("telefono").toString())
+						.build())
+				.collect(Collectors.toList());
+	}
+
+	
+	public Optional<Cliente> findById(Integer id) throws Exception {
+		String query = SQLConfiguration.getInstance().getQuery("query.clienti_byId");
+		Object[] params = new Object[]{id};
+		Map<String, Object> c = db.get(query, params);
+		if (c == null) return Optional.empty();
+		return Optional.ofNullable(Cliente.builder()
+				.idCliente((Integer) c.get("id_cliente"))
+				.denominazione(c.get("denominazione").toString())
+				.pIva(c.get("p_iva").toString())
+				.indirizzo(c.get("indirizzo").toString())
+				.telefono(c.get("telefono").toString())
+				.build());
+	}
+
 }

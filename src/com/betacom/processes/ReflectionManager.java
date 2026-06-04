@@ -1,4 +1,4 @@
-﻿package com.betacom.processes;
+package com.betacom.processes;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;

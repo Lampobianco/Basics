@@ -1,4 +1,4 @@
-﻿package com.betacom;
+package com.betacom;
 
 import java.io.File;
 import java.lang.reflect.Modifier;

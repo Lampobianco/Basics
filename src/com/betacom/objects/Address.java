@@ -8,7 +8,7 @@ public class Address implements Serializable{
 	 * 
 	 * */
 
-	private static long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 	
 	private String street;
 	private String city;
@@ -19,13 +19,7 @@ public class Address implements Serializable{
 	
 	
 	
-	public static long getSerialVersionUID() {
-		return serialVersionUID;
-	}
-	public static void setSerialVersionUID(long serialVersionUID) {
-		Address.serialVersionUID = serialVersionUID;
-	}
-	public String getStreet() {
+public String getStreet() {
 		return street;
 	}
 	public void setStreet(String street) {
@@ -34,8 +28,8 @@ public class Address implements Serializable{
 	public String getCity() {
 		return city;
 	}
-	public void setCity(String citv) {
-		this.city = citv;
+	public void setCity(String city) {
+		this.city = city;
 	}
 	public String getName() {
 		return name;

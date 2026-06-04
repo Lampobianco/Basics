@@ -6,14 +6,42 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.betacom.exeption.AcademyExeption;
 import com.betacom.objects.Dipendenti;
 import com.betacom.singleton.SQLConfiguration;
 import com.betacom.utils.GestioneSQL;
 import com.betacom.utils.Utilities;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class DipendentiDao {
 
 	private GestioneSQL db = new GestioneSQL();
+
+	// Insert — ritorna la primary key generata
+	public int insert(String queryName, Dipendenti dip) throws Exception {
+		Object[] params = new Object[]{
+			dip.getNome(),
+			dip.getCognome(),
+			dip.getDataAssunzione(),
+			dip.getTelefono(),
+			dip.getMansioni(),
+			dip.getStipendio(),
+			dip.getIdUfficio()
+		};
+		String query = SQLConfiguration.getInstance().getQuery(queryName);
+		return db.save(query, params, true);
+	}
+
+	// Delete per ID
+	public int delete(Integer id) throws Exception {
+		if (id == null)
+			throw new AcademyExeption("Id non caricata");
+		Object[] params = new Object[]{id};
+		String query = "delete from dipendenti where id_dipendente = ?";
+		return db.save(query, params, false);
+	}
 
 	// Recupera tutti i dipendenti
 	public List<Dipendenti> findAll() throws Exception {
@@ -31,7 +59,8 @@ public class DipendentiDao {
 	// Cerca un dipendente per ID — ritorna Optional vuoto se non trovato
 	public Optional<Dipendenti> findById(Integer id) throws Exception {
 		String query = SQLConfiguration.getInstance().getQuery("query.dipendenti_byId");
-		Map<String, Object> d = db.get(query, new Object[]{id});
+		Object[] param = new Object[]{id};
+		Map<String, Object> d = db.get(query, param);
 		if (d == null) return Optional.empty();
 		return Optional.ofNullable(buildDipendente(d));
 	}
